@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.align='center',
 
 ---
 
-This script generates panels B and C of main figure 1. 
+This script generates panels A, F and H of main figure 2. 
 
 ---
 
