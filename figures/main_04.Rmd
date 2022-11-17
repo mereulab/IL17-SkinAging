@@ -1,5 +1,5 @@
 ---
-title: "04_IL17_in_lymph"
+title: "Main Figure 4 (panels A, D, F, G, H and I)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.align='center',
 
 ---
 
-This script generates panels A, B, D, F and G of main figure 4. 
+This script generates panels A, D, F, G, H and I of main figure 4. 
 
 ---
 
@@ -28,8 +28,7 @@ This script generates panels A, B, D, F and G of main figure 4.
 library(Seurat)
 library(ggplot2)
 library(ggpubr)
-library(cowplot)
-library(dplyr)
+library(tidyverse)
 library(ggrepel)
 library(sccomp)
 library(here)
@@ -39,14 +38,14 @@ library(here)
 
 ```{r}
 # Seurat object
-lymphoid <- readRDS(here("data", "adult_aged", "lymphoid.RDS"))
-lymphoid_subclustered <- readRDS(here("data", "adult_aged", "lymphoid_subclustered.RDS"))
+lymphoid <- readRDS(here::here("data", "adult_aged", "lymphoid.RDS"))
+lymphoid_subclustered <- readRDS(here::here("data", "adult_aged", "lymphoid_subclustered.RDS"))
 
 # Sccomp object
-sccomp_lymphoid <- readRDS(here("data", "adult_aged", "sccomp_lymphoid_subclusters.RDS"))
+sccomp_lymphoid <- readRDS(here::here("data", "adult_aged", "sccomp_lymphoid_subclusters.RDS"))
 
 # Colors
-col_lymphoid_subclusters <- readRDS(here("data", "col_lymphoid_subclusters.RDS"))
+col_lymphoid_subclusters <- readRDS(here::here("data", "col_lymphoid_subclusters.RDS"))
 ```
 
 
@@ -81,7 +80,7 @@ ggsave(gg, file = here::here("figures", paste0("main_fig_4a.pdf")),
          width = 17.5, height = 4.5)
 ```
 
-### **Main figure 4b**
+### **Main figure 4d**
 
 ```{r, fig.width = 6, fig.height = 5}
 umap <- Seurat::DimPlot(object = lymphoid_subclustered, 
@@ -96,12 +95,12 @@ umap <- Seurat::DimPlot(object = lymphoid_subclustered,
 umap
 
 # save
-file.name <- here::here("figures", "main_fig_4b.pdf")
+file.name <- here::here("figures", "main_fig_4d.pdf")
 ggsave(file = file.name, plot = umap, width = 8, height = 6)
 ```
 
 
-### **Main figure 4d and 4f**
+### **Main figure 4f and 4h**
 
 ```{r, fig.width = 4, fig.height = 8}
 plots <- sccomp::plot_summary(sccomp_lymphoid) 
@@ -109,13 +108,13 @@ plots <- sccomp::plot_summary(sccomp_lymphoid)
 plots$boxplot
 
 # save
-file.name <-  here::here("figures", "main_fig_4d_f.pdf")
+file.name <-  here::here("figures", "main_fig_4f_h.pdf")
 ggsave(file = file.name, width = 15, height = 8)
 
 ```
 
 
-### **Main figure 4g**
+### **Main figure 4i**
 
 ```{r, fig.width = 7, fig.height = 4.5}
 Idents(lymphoid) <- lymphoid$annotation
@@ -137,6 +136,6 @@ gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 2, nrow = 1)
 gg
 
 # save
-ggsave(gg, file = here::here("figures", paste0("main_fig_4g.pdf")), 
+ggsave(gg, file = here::here("figures", paste0("main_fig_4i.pdf")), 
          width = 7, height = 4.5)
 ```
