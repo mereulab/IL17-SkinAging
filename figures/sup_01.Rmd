@@ -1,0 +1,183 @@
+---
+title: "Supplementary fig. 1"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels B and C of supplementary figure 1. 
+
+---
+
+
+##### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(matchSCore2)
+library(here)
+```
+
+##### **Load data:**
+
+```{r}
+# Lisi scores
+lisi.scores <- readRDS(here::here("results", "lisi.scores", "lisi.scores.RDS"))
+
+# Seurat objects
+lymphoid <- readRDS(here::here("data", "adult_aged", "lymphoid.RDS"))
+myeloid <- readRDS(here::here("data", "adult_aged", "myeloid.RDS"))
+non_immune <- readRDS(here::here("data", "adult_aged", "non_immune.RDS"))
+lymphoid_batch_effect <- readRDS(here::here("data", "adult_aged", "lymphoid_batch_effect.RDS"))
+myeloid_batch_effect <- readRDS(here::here("data", "adult_aged", "myeloid_batch_effect.RDS"))
+non_immune_batch_effect <- readRDS(here::here("data", "adult_aged", "non_immune_batch_effect.RDS"))
+
+# colors
+col_lymphoid <- readRDS(here::here("data", "col_lymphoid.RDS"))
+col_myeloid <- readRDS(here::here("data", "col_myeloid.RDS"))
+col_non_immune <- readRDS(here::here("data", "col_non_immune.RDS"))
+col_replicate <- readRDS(here::here("data", "adult_aged", "col_replicate.RDS"))
+```
+
+
+\
+
+### **Supplementary figure 1b**
+##### **LYMPHOID**
+
+```{r, fig.width = 7, fig.height = 5}
+batch_corrections_plots <- function(se_obj_batch_effect, se_obj_batch_correction, lisi.score, cols){
+  
+  gg_features <- list(theme_void(), 
+                      theme(legend.text = element_text(size = 14),
+                            plot.title = element_text(size = 15, hjust = 0.5),
+                            plot.margin = unit(c(0.5,0.5,0.5,0.5), "lines")))
+  
+  # UMAP no batch effect correction
+  umap_batch_effect <- Seurat::DimPlot(se_obj_batch_effect, 
+                                       reduction = 'umap', 
+                                       cols = cols, 
+                                       group.by = "replicate") + 
+    labs(title = "no batch effect correction") +
+    gg_features
+  
+  # UMAP after batch effect correction
+  umap_batch_correction <- Seurat::DimPlot(se_obj_batch_correction, 
+                                           reduction = 'umap', 
+                                           cols = cols, 
+                                           group.by = "replicate") + 
+    labs(title = "after batch effect correction") +
+    gg_features
+  
+  # LISI value
+  umap_lisi_score <- lisi.score %>%
+    ggplot(aes(UMAP_1, UMAP_2, col = replicate)) +
+    geom_point(shape = 16, size = 0.5) +
+    scale_color_gradient(low="blue", high="yellow") + 
+    labs(title = "LISI value") +
+    gg_features
+
+
+  plots <- list(umap_batch_effect, umap_batch_correction, umap_lisi_score)
+  return(plots)
+}
+```
+
+
+##### **LYMPHOID**
+
+```{r, fig.width = 21, fig.height = 5}
+lymphoid_batch_corrections_plots <- batch_corrections_plots(lymphoid_batch_effect, lymphoid, lisi.scores[["lymphoid_adult_vs_aged"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = lymphoid_batch_corrections_plots, ncol = 3, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_1b.1.pdf")), 
+         width = 21, height = 5)
+```
+
+
+
+##### **MYELOID**
+
+```{r, fig.width = 21, fig.height = 5}
+myeloid_batch_corrections_plots <- batch_corrections_plots(myeloid_batch_effect, myeloid, lisi.scores[["myeloid_adult_vs_aged"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = myeloid_batch_corrections_plots, ncol = 3, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_1b.2.pdf")), 
+         width = 21, height = 5)
+```
+
+##### **NON-IMMUNE**
+
+```{r, fig.width = 21, fig.height = 5}
+non_immune_batch_corrections_plots <- batch_corrections_plots(non_immune_batch_effect, non_immune, lisi.scores[["non_immune_adult_vs_aged"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = non_immune_batch_corrections_plots, ncol = 3, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_1b.3.pdf")), 
+         width = 21, height = 5)
+```
+
+### **Supplementary figure 1c**
+
+##### **LYMPHOID**
+
+```{r, fig.width = 7, fig.height = 5}
+matchSCore2::summary_barplot(lymphoid$annotation, lymphoid$replicate) + 
+  scale_fill_manual(values = col_lymphoid) +
+  labs(title = "CD45+ Lymphoid") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,2.5), "lines"))
+
+ggsave(file = here::here("figures", paste0("main_fig_1c.1.pdf")), 
+         width = 7, height = 5.5)
+```
+
+##### **MYELOID**
+
+```{r, fig.width = 7, fig.height = 5.5}
+matchSCore2::summary_barplot(myeloid$annotation, myeloid$replicate) + 
+  scale_fill_manual(values = col_myeloid) +
+  labs(title = "CD45+ Myeloid") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,2.5), "lines")) 
+
+ggsave(file = here::here("figures", paste0("main_fig_1c.2.pdf")), 
+         width = 7, height = 5.5)
+```
+
+##### **NON-IMMUNE**
+
+```{r, fig.width = 6.5, fig.height = 5.5}
+matchSCore2::summary_barplot(non_immune$annotation, non_immune$replicate) + 
+  scale_fill_manual(values = col_non_immune) +
+  labs(title = "CD45-") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,2.5), "lines")) 
+
+ggsave(file = here::here("figures", paste0("main_fig_1c.3.pdf")), 
+         width = 6.5, height = 5.5)
+```
+
