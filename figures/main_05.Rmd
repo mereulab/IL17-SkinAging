@@ -1,0 +1,193 @@
+---
+title: "05_il17ttm"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels C, D, F and H of main figure 5. 
+
+---
+
+
+#### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(cowplot)
+library(dplyr)
+library(ggrepel)
+library(sccomp)
+library(here)
+```
+
+#### **Load data:**
+
+```{r}
+# Seurat objects
+non_immune <- readRDS(here("data", "control_treated", "non_immune.RDS"))
+fibroblasts <- readRDS(here("data", "control_treated", "fibroblasts.RDS"))
+
+# Colors
+col_fibroblasts <- readRDS(here("data", "col_fibroblasts.RDS"))
+```
+
+
+\
+
+### **Main figure 5c**
+
+```{r, echo = F}
+non_immune$condition_annotation <- paste(non_immune$condition, non_immune$annotation, sep = "_") 
+levels = c("control_VEC-venules", "anti-IL17af_VEC-venules",
+            "control_Lymphatic EC", "anti-IL17af_Lymphatic EC",
+            "control_Schwann_1", "anti-IL17af_Schwann_1", 
+            "control_Schwann_2", "anti-IL17af_Schwann_2",
+            "control_Pericyte", "anti-IL17af_Pericyte",
+            "control_Fibroblast_1", "anti-IL17af_Fibroblast_1", 
+            "control_Fibroblast_2",  "anti-IL17af_Fibroblast_2", 
+            "control_Fibroblast_3", "anti-IL17af_Fibroblast_3",
+            "control_Fibroblast_4", "anti-IL17af_Fibroblast_4",
+            "control_Fibroblast_5", "anti-IL17af_Fibroblast_5",  
+            "control_VEC-arterioles and capillary", "anti-IL17af_VEC-arterioles and capillary")
+non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 12, fig.height = 5.8}
+genes <-  c("B2m", "Cd74", "Lifr", "Osmr", "Sele")
+
+dotplot <- Seurat::DotPlot(non_immune, 
+                           features = genes, 
+                           dot.min = 0, 
+                           dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) + 
+  coord_flip() +  
+  scale_color_gradient2(low = "#1b13f0", mid = "lightgray", high = "#c7080e") +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle=90, hjust = 1))
+
+dotplot
+
+# save
+file.name <- here("figures", "main_fig_5c.pdf")
+ggsave(file = file.name, plot = dotplot, width = 8, height = 5.8)
+```
+
+### **Main figure 5d**
+
+```{r, fig.width = 6.5, fig.height = 4.5}
+umap <- Seurat::DimPlot(object = fibroblasts, 
+                        reduction = 'umap', 
+                        group.by = "fibs.annot", 
+                        cols = col_fibroblasts) +
+  theme_void() +
+  theme(legend.text = element_text(size = 14),
+        plot.title = element_text(size = 14, hjust = 0.5),
+        strip.text.x =element_text(size = 15)) +
+  labs(title = "Subpopulation analysis of fibroblasts")
+umap
+
+# save
+file.name <- here::here("figures", "main_fig_5d.pdf")
+ggsave(file = file.name, plot = umap, width = 8, height = 6)
+```
+
+
+### **Main figure 5f**
+
+```{r, echo = F}
+levels <- c("control_Fibroblast_1_2", "anti-IL17af_Fibroblast_1_2",
+              "control_Fibroblast_1_1", "anti-IL17af_Fibroblast_1_1",
+              "control_Fibroblast_1_0","anti-IL17af_Fibroblast_1_0", 
+              "control_Fibroblast_2_0",  "anti-IL17af_Fibroblast_2_0",
+              "control_Fibroblast_2_1", "anti-IL17af_Fibroblast_2_1",
+              "control_Fibroblast_3_0", "anti-IL17af_Fibroblast_3_0",
+              "control_Fibroblast_3_1", "anti-IL17af_Fibroblast_3_1",
+              "control_Fibroblast_3_2",   "anti-IL17af_Fibroblast_3_2",
+              "control_Fibroblast_3_3",  "anti-IL17af_Fibroblast_3_3",
+              "control_Fibroblast_4",   "anti-IL17af_Fibroblast_4", 
+              "control_Fibroblast_5", "anti-IL17af_Fibroblast_5")
+
+fibroblasts$condition_annotation <- factor(fibroblasts$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 12, fig.height = 5.8}
+genes <- c("Cd9" ,"Cxcr4"	, "Ifitm3",	"Serpine2",	"Smoc2")
+
+dotplot <- Seurat::DotPlot(non_immune, 
+                           features = genes, 
+                           dot.min = 0, 
+                           dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) + 
+  coord_flip() +  
+  scale_color_gradient2(low = "#1b13f0", mid = "lightgray", high = "#c7080e") +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle=90, hjust = 1))
+
+dotplot
+
+# save
+file.name <- here("figures", "main_fig_5f.pdf")
+ggsave(file = file.name, plot = dotplot, width = 8, height = 5.8)
+```
+
+### **Main figure 5h**
+
+```{r, echo = F}
+levels <- c("control_Fibroblast_3_3",  "anti-IL17af_Fibroblast_3_3",
+            "control_Fibroblast_1_2", "anti-IL17af_Fibroblast_1_2",
+            "control_Fibroblast_1_1", "anti-IL17af_Fibroblast_1_1",
+            "control_Fibroblast_1_0","anti-IL17af_Fibroblast_1_0", 
+            "control_Fibroblast_2_0",  "anti-IL17af_Fibroblast_2_0",
+            "control_Fibroblast_2_1", "anti-IL17af_Fibroblast_2_1",
+            "control_Fibroblast_3_0", "anti-IL17af_Fibroblast_3_0",
+            "control_Fibroblast_3_1", "anti-IL17af_Fibroblast_3_1",
+            "control_Fibroblast_3_2",   "anti-IL17af_Fibroblast_3_2",
+            "control_Fibroblast_4",   "anti-IL17af_Fibroblast_4", 
+            "control_Fibroblast_5", "anti-IL17af_Fibroblast_5")
+fibroblasts$condition_annotation <- factor(fibroblasts$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 12, fig.height = 5.8}
+genes <- c("B2m", "Cd9", "Cxcl12", "Ifitm3", "Lamp1")
+
+dotplot <- Seurat::DotPlot(non_immune, 
+                           features = genes, 
+                           dot.min = 0, 
+                           dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) + 
+  coord_flip() +  
+  scale_color_gradient2(low = "#1b13f0", mid = "lightgray", high = "#c7080e") +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle=90, hjust = 1))
+
+dotplot
+
+# save
+file.name <- here("figures", "main_fig_5h.pdf")
+ggsave(file = file.name, plot = dotplot, width = 8, height = 5.8)
+```
+
