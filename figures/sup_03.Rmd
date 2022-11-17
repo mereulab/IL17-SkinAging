@@ -1,5 +1,5 @@
 ---
-title: "Supplementary fig. 2"
+title: "Supplementary fig. 3 (panels A, C, D and E)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
@@ -53,29 +53,31 @@ df_deepscore_predicted <- readRDS(here::here("data", "adult_aged", "df_deepscore
 
 ### **Supplementary figure 3a**
 
-```{r, fig.width = 16, fig.height = 10}
+```{r, fig.width = 4, fig.height = 8}
 plots <- sccomp::plot_summary(sccomp_myeloid) 
 
 plots$boxplot
 
 # save
 file.name <-  here::here("figures", "supp_fig_3a.pdf")
-ggsave(file = file.name, width = 15, height = 8)
+ggsave(file = file.name, width = 4, height = 8)
 ```
 
 ### **Supplementary figure 3c**
 
-```{r, fig.width = 6.5, fig.height = 12}
+```{r, fig.width = 4, fig.height = 10}
 features <- c("Monocyte_1", "Macrophage_2", "Dendritic cell")
 
 fp_plots <- features %>%
   purrr::imap(~Seurat::VlnPlot(object = dermis, 
                                features = "Il1b", 
-                               split.by = "condition", 
+                               group.by = "condition", 
                                idents = .x, 
                                cols = c("lightgray", "red")) +
-  labs(title = .x) +
+  labs(title = .x, 
+       subtitle = "Il1b") +
   theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(face = "italic", hjust = 0.5),
         axis.title.x = element_blank()))
 
 gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 1, nrow = 3)
@@ -86,33 +88,10 @@ ggsave(gg, file = here::here("figures", paste0("supp_fig_3c.pdf")),
          width = 16, height = 6)
 ```
 
-### **Supplementary figure 3d**
-
-```{r, fig.width = 4, fig.height = 8}
-load("/Users/mcasado/Documents/Labs/Cellular_systems_genomics/Projects/Aznar_project/Single_cell/aged_adult/transcriptional_noise/data3.Rdata")
-
-matchSCore2::summary_barplot(data$prediction, data$final.annot) + 
-    labs(title = "CD45+ Myeloid") +
-    theme(plot.title = element_text(size = 15, hjust = 0.5),
-          plot.margin = unit(c(0.5,0.5,0.5,2.5), "lines")) +
-  scale_fill_manual(name = "", labels = c("Unaffected cells", "Age-affected cells"), values = c("lavender","mediumpurple3")) +
-  theme_bw() +
-  coord_cartesian(ylim = c(0, 20))+
-  ylab("% of cells") +
-  xlab("") +
-  theme(
-    legend.title = element_blank(),
-    legend.text = element_text(size = 13),
-    axis.text.x = element_text(colour = "black", size = 14, angle = 45, hjust = 1, vjust = 1),
-    axis.text.y = element_text(colour = "black", size = 16),
-    axis.title.y = element_text(color="black", size=14),
-    axis.line = element_line(colour = "black", size = 1),
-    panel.grid.major = element_blank(), panel.border = element_blank())
-```
 
 ### **Supplementary figure 3e**
 
-```{r, fig.width = 6, fig.height = 6}
+```{r, fig.width = 12, fig.height = 7.5}
 features <- c("Il17ra", "Il17rc", "Il17a", "Il17f")
 
 Idents(dermis) <- dermis$condition
@@ -145,6 +124,6 @@ gg
 
 # save
 ggsave(gg, file = here::here("figures", paste0("supp_fig_3e.pdf")), 
-         width = 16, height = 6)
+         width = 16, height = 7.5)
 ```
 
