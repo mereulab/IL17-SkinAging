@@ -1,5 +1,5 @@
 ---
-title: "Supplementary fig. 4"
+title: "Supplementary fig. 4 (panels A, B and C)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
