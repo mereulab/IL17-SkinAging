@@ -1,0 +1,121 @@
+---
+title: "Main Figure 1 (panels B and C)"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels B and C of main figure 1. 
+
+---
+
+
+#### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(here)
+```
+
+
+#### **Load data:**
+
+```{r}
+# Seurat object
+dermis <- readRDS(here::here("data", "adult_aged", "dermis.RDS"))
+
+# Colors
+col_dermis <- readRDS(here::here("data", "col_dermis.RDS"))
+```
+
+
+\
+
+### **Main figure 1b**
+
+```{r, fig.width = 15, fig.height = 8}
+umap <- Seurat::DimPlot(object = dermis, 
+                        reduction = 'umap', 
+                        cols = col_dermis, 
+                        group.by = "annotation") + 
+  theme_void() +
+  theme(legend.text = element_text(size = 14),
+        plot.title = element_text(size = 14, hjust = 0.5),
+        plot.margin = unit(c(1,1,1,1), "lines")) +
+    labs(title = "Adult and Aged EpCAM- dermal cells")
+
+umap
+# save
+file.name <- here::here("figures", "main_fig_1b.pdf")
+ggsave(file = file.name, plot = umap, width = 15, height = 8)
+```
+\
+
+### **Main figure 1c**
+
+```{r, fig.width = 19, fig.height = 10}
+features <- c("Acta2","Rgs5", # Pericyte
+              "Aqp1","Sele","Pecam1", # VEC-venules
+              "Ptprb","Flt1", # VEC-arterioles and capillary
+              "Lyve1", "Hes1", # Lymphatic EC
+              "Cryab", "Plekha4","Scn7a",# Schwann_1
+              "Kcna1", "Sox10", # Schwann_2
+              "Col11a1","Aspn","Coch", # Fibroblast_4
+              "Col1a1","Col1a2","Cd34","Robo1", "Col3a1", # Fibroblast_2
+              "Crabp1","Inhba","Notum", # Fibroblast_1
+              "Efemp1","Il1r2","Ccl11", # Fibroblast_3
+              "Myoc","Dcn", # Fibroblast_5
+              "Gzmc","Ccl5","Nkg7", # NK
+              "Il13","Kit", # ILC
+              "Trdc","Tcrg-C1", # γδ T
+              "Cd28","Cd4", "Il7r", # Cd4+ Th 
+              "Cd8a","Cd8b1", # Cd8+ T
+              "Foxp3", # T reg
+              "Hmgb2", # Proliferating T
+              "Mki67", # Proliferating myeloid
+              "Cd207",# Dendritic cell
+              "Ccl8", "C1qa", # Monocyte_2
+              "Il1b", # Macrophage_1
+              "Tnfsf9",# Macrophage_2
+              "Plac8","Cd14",# Monocyte_1
+              "Retnla","C1qb","Ccr2",# Monocyte_3
+              "Ear2", "Cd163" # Macrophage_3
+              )
+
+dermis@active.ident <- dermis$annotation
+
+dotplot <- Seurat::DotPlot(object = dermis,
+                           features = features,
+                           cols = c("lightgray","blue"),
+                           col.min = -2.5, 
+                           col.max = 2.5,
+                           dot.min = 0,
+                           dot.scale = 7.5,
+                           idents = dermis@active.ident,
+                           cluster.idents = FALSE,
+                           scale = TRUE,
+                           scale.by = "radius") + 
+  theme(axis.text.x = element_text(angle = 90),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  scale_color_gradient2(low = "#1b13f0", mid = "lightgray", high = "#c7080e") 
+dotplot
+
+# save
+file.name <- here::here("figures", "main_fig_1c.pdf")
+ggsave(file = file.name, plot = dotplot, width = 19, height = 10)
+```
+
