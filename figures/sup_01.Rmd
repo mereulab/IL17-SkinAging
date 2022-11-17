@@ -1,5 +1,5 @@
 ---
-title: "Supplementary fig. 1"
+title: "Supplementary fig. 1 (panels B and C)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
@@ -86,7 +86,7 @@ batch_corrections_plots <- function(se_obj_batch_effect, se_obj_batch_correction
   
   # LISI value
   umap_lisi_score <- lisi.score %>%
-    ggplot(aes(UMAP_1, UMAP_2, col = replicate)) +
+    ggplot2::ggplot(aes(UMAP_1, UMAP_2, col = replicate)) +
     geom_point(shape = 16, size = 0.5) +
     scale_color_gradient(low="blue", high="yellow") + 
     labs(title = "LISI value") +
