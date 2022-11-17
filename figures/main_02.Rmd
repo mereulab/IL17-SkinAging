@@ -1,0 +1,164 @@
+---
+title: "Main Figure 2 (panels A, F and H)"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels B and C of main figure 1. 
+
+---
+
+
+#### **Libraries:**
+
+```{r}
+library(Seurat)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(cowplot)
+library(here)
+```
+
+#### **Load data:**
+
+```{r}
+# Seurat object
+non_immune <- readRDS(here("data", "adult_aged", "non_immune.RDS"))
+```
+
+
+\
+
+### **Main figure 2a**
+
+```{r, fig.width = 15, fig.height = 10}
+# Cell type populations
+cell.types <- c("Fibroblast_1" = "fibroblast_1_ss1",
+                "Fibroblast_2" = "fibroblast_2_ss1",
+                "Fibroblast_3" = "fibroblast_3_ss1",
+                "Fibroblast_4" = "fibroblast_4_ss1", 
+                "Fibroblasts_general" = "fibroblasts_general_ss1",
+                "Dermal_papilla_fibroblast" = "dermal_papilla_fibroblast_ss1", 
+                "Schwann_1" = "Schwann_1_ss1", 
+                "Schwann_2" = "Schwann_2_ss1",
+                "Lymphatic_EC" = "Lymphatic_ECs_ss1", 
+                "Vascular_EC" = "Vascular_ECs_ss1", 
+                "Vascular_ECs_Venules" = "Vascular_ECs_Venules_ss1", 
+                "Pericyte" = "pericytes_ss1")
+
+
+fp_plots <- cell.types %>%
+  purrr::imap(~Seurat::FeaturePlot(object = non_immune, 
+                                   features = .x, 
+                                   pt.size = 0.25, 
+                                   min.cutoff = "q9", 
+                                   order = T) +
+    labs(title = .y) + 
+    scale_color_viridis_c(name ="Average signature expression", option = "plasma") &
+    theme_void() + 
+    theme(plot.title = element_text(face = "bold", hjust = 0.5),
+          legend.position = "none"))
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 4, nrow = 3)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_2a.pdf")), 
+         width = 15, height = 10)
+```
+
+
+### **Main figure 2f**
+
+```{r, echo = F}
+non_immune$condition_annotation <- paste(non_immune$condition, non_immune$annotation, sep = "_") 
+
+levels <- c("aged_Fibroblast_1", "adult_Fibroblast_1",
+              "aged_Fibroblast_2", "adult_Fibroblast_2",           
+              "aged_Fibroblast_3", "adult_Fibroblast_3",      
+              "aged_Fibroblast_4", "adult_Fibroblast_4",                
+              "aged_Fibroblast_5", "adult_Fibroblast_5",
+              "aged_VEC-venules", "adult_VEC-venules",
+              "aged_Pericyte", "adult_Pericyte",                          
+              "aged_Schwann_2", "adult_Schwann_2",                  
+              "adult_Lymphatic EC" , "aged_Lymphatic EC",               
+              "aged_Schwann_1", "adult_Schwann_1",                 
+              "aged_VEC-arterioles and capillary", "adult_VEC-arterioles and capillary")
+
+non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 7, fig.height = 7.5}
+features <- c("Kdm1a","Neat1", "Nfkbiz", "Socs1")
+
+dotplot <- Seurat::DotPlot(object = non_immune, 
+                           features = features, 
+                           dot.min = 0, dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) +  
+    scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_color_gradient2(low ="#1b13f0",  mid = "lightgray", high = "#c7080e") 
+dotplot
+
+# save
+file.name <- here::here("figures", "main_fig_2f.pdf")
+ggsave(file = file.name, plot = dotplot, width = 5, height = 8)
+```
+
+### **Main figure 2h**
+
+```{r, echo = F}
+levels <-  c("aged_Fibroblast_3", "adult_Fibroblast_3",      
+              "aged_Fibroblast_1", "adult_Fibroblast_1",
+              "aged_Fibroblast_2", "adult_Fibroblast_2",           
+              "aged_Fibroblast_4", "adult_Fibroblast_4",                
+              "aged_Fibroblast_5", "adult_Fibroblast_5",
+              "aged_VEC-venules", "adult_VEC-venules",
+              "aged_Pericyte", "adult_Pericyte",                          
+              "aged_Schwann_2", "adult_Schwann_2",                  
+              "adult_Lymphatic EC" , "aged_Lymphatic EC",               
+              "aged_Schwann_1", "adult_Schwann_1",                 
+              "aged_VEC-arterioles and capillary", "adult_VEC-arterioles and capillary")
+
+non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 7, fig.height = 7.5}
+features <- c("Ccl8",	"Ccl19"	,"Irf1",	"Mmp14")
+
+dotplot <- Seurat::DotPlot(object = non_immune, 
+                           features = features, 
+                           dot.min = 0, 
+                           dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) +  
+    scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_color_gradient2(low ="#1b13f0",  mid = "lightgray", high = "#c7080e") 
+dotplot
+
+# save
+file.name <- here::here("figures", "main_fig_2h.pdf")
+ggsave(file = file.name, plot = dotplot, width = 5, height = 8)
+```
+
+
+
