@@ -1,5 +1,5 @@
 ---
-title: "Supplementary fig. 2"
+title: "Supplementary fig. 2 (panels A, B, C, D and E)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.align='center',
 
 ---
 
-This script generates panels B and C of supplementary figure 2. 
+This script generates panels A, B, C, D and E of supplementary figure 2. 
 
 ---
 
@@ -93,7 +93,7 @@ levels <- c("aged_VEC-venules",  "adult_VEC-venules",
 non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
 ```
 
-```{r, fig.width = 6.5, fig.height = 6}
+```{r, fig.width = 6.5, fig.height = 6.5}
 features <- c("Casp4", "Foxo3", "Nod1", "Sirpa")
 
 dotplot <- Seurat::DotPlot(object = non_immune, 
