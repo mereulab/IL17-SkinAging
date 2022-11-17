@@ -88,9 +88,9 @@ ggsave(file = file.name, width = 4, height = 8)
 
 ```{r, fig.width = 12.5, fig.height = 3.5}
 Idents(myeloid) = myeloid$annotation
-features <- c("Monocyte_1", "Macrophage_2", "Dendritic cell")
+clusters <- c("Monocyte_1", "Macrophage_2", "Dendritic cell")
 
-fp_plots <- features %>%
+fp_plots <- clusters %>%
   purrr::imap(~Seurat::VlnPlot(object = myeloid, 
                                features = "Il1b", 
                                group.by = "condition", 
