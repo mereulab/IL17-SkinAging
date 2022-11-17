@@ -66,9 +66,9 @@ ggsave(file = file.name, width = 4, height = 8)
 ### **Supplementary figure 3c**
 
 ```{r, fig.width = 4, fig.height = 10}
-features <- c("Monocyte_1", "Macrophage_2", "Dendritic cell")
+clusters <- c("Monocyte_1", "Macrophage_2", "Dendritic cell")
 
-fp_plots <- features %>%
+fp_plots <- clusters %>%
   purrr::imap(~Seurat::VlnPlot(object = dermis, 
                                features = "Il1b", 
                                group.by = "condition", 
