@@ -1,0 +1,178 @@
+---
+title: "Main Figure 3 (panels A, B, C and D)"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels A, B, C and D of main figure 3. 
+
+---
+
+
+#### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(sccomp)
+library(here)
+```
+
+#### **Load data:**
+
+```{r}
+# Seurat objects
+immune <- readRDS(here::here("data", "adult_aged", "immune.RDS"))
+lymphoid <- readRDS(here::here("data", "adult_aged", "lymphoid_deepscore.RDS"))
+
+# Sccomp object
+sccomp_lymphoid <- readRDS(here::here("data", "adult_aged", "sccomp_lymphoid.RDS"))
+
+# DE genes 
+DEG_Cd4Th_adult_vs_aged <- readRDS(here::here("data", "adult_aged", "de_cluster_Cd4+ Th_Wilcoxon_aged_vs_adult.RDS"))
+DEG_γδT_adult_vs_aged <- readRDS(here::here("data", "adult_aged", "de_cluster_γδ T_Wilcoxon_aged_vs_adult.RDS"))
+DEG_ILC_adult_vs_aged <- readRDS(here::here("data", "adult_aged", "de_cluster_ILC_Wilcoxon_aged_vs_adult.RDS"))
+
+# Colors
+col_immune <- readRDS(here::here("data", "col_immune.RDS"))
+```
+
+
+\
+
+### **Main figure 3a**
+
+```{r, fig.width = 15, fig.height = 8}
+umap <- Seurat::DimPlot(object = immune, 
+                        reduction = 'umap', 
+                        group.by = "cell.type", 
+                        cols = col_immune, 
+                        split.by = "condition") +
+  theme_void() +
+  theme(legend.text = element_text(size = 14),
+        plot.margin = unit(c(0.3,1,1,0), "lines"),
+        plot.title = element_blank(),
+        strip.text.x =element_text(size = 15)) 
+umap
+
+# save
+file.name <- here::here("figures", "main_fig_3a.pdf")
+ggsave(file = file.name, plot = umap, width = 15, height = 8)
+```
+
+### **Main figure 3b**
+
+```{r, fig.width = 4, fig.height = 8}
+plots <- sccomp::plot_summary(sccomp_lymphoid) 
+
+plots$boxplot
+
+# save
+file.name <-  here::here("figures", "main_fig_3b.pdf")
+ggsave(file = file.name, width = 15, height = 8)
+```
+
+### **Main figure 3c**
+
+```{r, fig.width = 6, fig.height = 9, results='hide'}
+
+Idents(lymphoid) <- lymphoid$condition
+conditions <- levels(factor(lymphoid$condition))
+
+dt <- conditions %>%
+  purrr::imap(~WhichCells(object = lymphoid, ident = .)) 
+names(dt) <- conditions 
+
+fp_plots <- dt %>%
+  purrr::imap(~Seurat::FeaturePlot(lymphoid, features = "aging.score", order = T, cells = .x, pt.size = 0.5) +
+              scale_color_gradient(name = "Age deviance score", 
+                                   low = "yellow", 
+                                   high = "dodgerblue", 
+                                   labels = c("Min","Max"), 
+                                   breaks = c(min(lymphoid$aging.score), 
+                                              max(lymphoid$aging.score)), 
+                                   limits = c(min(lymphoid$aging.score), 
+                                              max(lymphoid$aging.score))) +
+            theme(legend.text = element_text(size = 12),
+                  plot.margin = unit(c(0.3,1,1,0), "lines"),
+                  plot.subtitle = element_text(face = "italic", hjust = 0.5),
+                  legend.title = element_text(color = "black", size = 14, vjust = 3.5)) + 
+            labs(title = .y) 
+            ) 
+
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 1, nrow = 2)
+gg
+
+# save
+fp_plots %>% 
+  purrr::imap(~ggsave(.x, file = here::here("figures", paste0("main_fig_3c_", .y ,".pdf")), 
+         width = 6, height = 4.5))
+```
+
+
+### **Main figure 3d**
+
+```{r, fig.width = 7, fig.height = 12, results=F}
+avg_log2FC_threshold <- 0.35
+p_val_adj_BH_threshold <- 0.05
+
+DEGs <- list(DEG_Cd4Th_adult_vs_aged, DEG_ILC_adult_vs_aged, DEG_γδT_adult_vs_aged)
+names(DEGs) <- c("CD4+Th", "γδ T", "ILC")
+genes_of_interest <- c("Il17a", "Il17f")
+ 
+significant_DEGs <- DEGs %>% 
+  purrr::imap(~tibble::rownames_to_column(.x, "gene") %>%
+              dplyr::mutate(Significance =
+              case_when(avg_log2FC > avg_log2FC_threshold & p_val_adj_BH < p_val_adj_BH_threshold ~
+                            paste0("Upregulated in adult /n (Adj. p-val BH<0.05"),
+                          avg_log2FC < -avg_log2FC_threshold & p_val_adj_BH < p_val_adj_BH_threshold ~
+                            paste0("Upregulated in aged /n (Adj. p-val BH<0.05"),
+                          TRUE ~ "Not significant")))
+
+volcano_plots <- significant_DEGs %>% 
+  purrr::imap(~ggplot2::ggplot(data =.x , aes(x = avg_log2FC, 
+                                    y = -log10(p_val_adj_BH), 
+                                    color = Significance)) + 
+                                geom_point() + 
+                                ggrepel::geom_text_repel(data = filter(.x, 
+                                                           gene == "Il17a"|gene == "Il17f"), 
+                                                         aes(label = gene, color = "black"),
+                                                         colour = "black") +
+                                theme_bw() +
+                                geom_vline(xintercept = c(-avg_log2FC_threshold, 
+                                                          avg_log2FC_threshold), 
+                                           col ="gray", linetype = "dashed")  + 
+                                geom_hline(yintercept = -log10(p_val_adj_BH_threshold), 
+                                           col ="gray", linetype = "dashed")  + 
+                                labs(title = .y) + 
+                                theme(plot.title = element_text(hjust = p_val_adj_BH_threshold)) +
+                                scale_color_manual(values = c("gray", "blue", "red")) +
+                                scale_x_continuous(breaks = c(seq(-2, 2, 0.5)), limits = c(-2, 2))) 
+
+
+gg <- ggpubr::ggarrange(plotlist = volcano_plots, ncol = 1, nrow = 3)
+gg
+
+# save
+volcano_plots %>% 
+  purrr::imap(~ggsave(.x, file = here::here("figures", paste0("main_fig_3d_", .y ,".pdf")), 
+         width = 9, height = 4.5))
+
+```
+
