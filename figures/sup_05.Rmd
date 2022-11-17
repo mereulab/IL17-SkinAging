@@ -1,0 +1,186 @@
+---
+title: "Supplementary fig. 5"
+author: "Marta Casado-Pelaez"
+date: "2022-10-03"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels B and B of supplementary figure 5. 
+
+---
+
+
+##### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(sccomp)
+library(matchSCore2)
+library(tidyr)
+library(dplyr)
+library(reshape2)
+library(lisi)
+library(here)
+```
+
+##### **Load data:**
+
+```{r}
+# Seurat objects
+myeloid <- readRDS(here("data", "control_treated", "myeloid.RDS"))
+
+# Sccomp object
+sccomp_lymphoid <- readRDS(here("data", "control_treated", "sccomp_lymphoid.RDS"))
+sccomp_myeloid <- readRDS(here("data", "control_treated", "sccomp_myeloid.RDS"))
+sccomp_non_immune <- readRDS(here("data", "control_treated", "sccomp_non_immune.RDS"))
+
+# DEGs 
+adult_DEGs <- readRDS(here("data", "adult_aged", "adult_DEGs.RDS"))
+aged_DEGs <- readRDS(here("data", "adult_aged", "aged_DEGs.RDS"))
+
+# SAASP genes
+senescence_up_reg <- readRDS(here("data", "senescence_up_reg.RDS"))
+senescence_down_reg <- readRDS(here("data", "senescence_down_reg.RDS"))
+```
+
+
+\
+
+### **Supplementary figure 2a**
+
+```{r, fig.width = 16, fig.height = 10}
+levels = c("Cd4+ Th", "Cd8+ T", "Dendritic cell", "Fibroblast_1", "Fibroblast_2", "Fibroblast_3", "Fibroblast_4", "Fibroblast_5", "ILC", "Lymphatic EC", "Macrophage_1", "Macrophage_2", "Macrophage_3", "Monocyte_1", "Monocyte_2", "Monocyte_3", "NK", "Pericyte", "Proliferating T", "Proliferative myeloid", "Schwann_1", "Schwann_2", "T reg", "VEC-arterioles and capillary", "VEC-venules" , "γδ T")
+
+adult_top100 <- cut_markers(as.vector(levels(ordered(as.factor(adult_DEGs$cluster), levels = levels))),
+                       markers = adult_DEGs,
+                       ntop = 100
+)
+
+aged_top100 <- cut_markers(as.vector(levels(ordered(as.factor(aged_DEGs$cluster), levels = levels))),
+                      markers = aged_DEGs,
+                      ntop = 100
+)
+
+ms_plot <- matchSCore2(gene_cl.ref = adult_top100, gene_cl.obs = aged_top100, ylab="ADULT", xlab= "AGED")
+ms_plot$ggplot
+
+# save
+file.name <- here("figures", "supp_fig_2a.pdf")
+ggsave(file = file.name, plot = ms_plot$ggplot, width = 8, height = 6)
+```
+
+### **Supplementary figure 2b**
+
+```{r, echo = F}
+non_immune$condition_annotation <- paste(non_immune$condition, non_immune$annotation, sep = "_") 
+levels <- c("aged_VEC-venules",  "adult_VEC-venules",
+            "aged_Lymphatic EC" , "adult_Lymphatic EC",
+            "aged_Fibroblast_1", "adult_Fibroblast_1",    
+            "aged_Fibroblast_2", "adult_Fibroblast_2",             
+            "aged_Fibroblast_3", "adult_Fibroblast_3",
+            "aged_Fibroblast_4", "adult_Fibroblast_4",           
+            "aged_Fibroblast_5", "adult_Fibroblast_5",
+            "aged_Pericyte", "adult_Pericyte",
+            "aged_Schwann_1", "adult_Schwann_1",                 
+            "aged_Schwann_2", "adult_Schwann_2",        
+            "aged_VEC-arterioles and capillary", "adult_VEC-arterioles and capillary")
+non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 7, fig.height = 7}
+genes <- c("Casp4","Foxo3","Nod1","Sirpa")
+
+dot_leg <- DotPlot(non_immune, features = genes, dot.min = 0, dot.scale = 10, group.by = "condition_annotation", scale = T) & 
+  RotatedAxis() & 
+  scale_color_gradient2(low ="#1b13f0", mid = "lightgray", high = "#c7080e") &
+  guides(color = guide_colorbar(title = 'Average Expression')) & 
+  theme(axis.title.y = element_blank(), axis.title.x = element_blank()) 
+
+dot_leg
+
+# save
+file.name <- here("figures", "supp_fig_2b.pdf")
+ggsave(file = file.name, plot = dot_leg, width = 5.8, height = 10)
+```
+
+### **Supplementary figure 2c**
+
+```{r, fig.width = 4, fig.height = 8}
+plots <- plot_summary(sccomp_non_immune) 
+
+plots$boxplot
+
+# save
+file.name <- here("figures", "supp_fig_2c.pdf")
+ggsave(file = file.name, width = 15, height = 8)
+```
+
+### **Supplementary figure 2d**
+
+```{r, fig.width = 8, fig.height = 6}
+vln_cdkn1a <- VlnPlot(non_immune, features = "Cdkn1a", cols = c("lightgray", "red"), pt.size  = 0.8, split.by =  "condition") &
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size=15),
+        title = element_text(size=17)) 
+vln_cdkn1a
+
+vln_cdkn2a <- VlnPlot(non_immune, features = "Cdkn2a", cols = c("lightgray", "red"), pt.size  = 0.8, split.by =  "condition") &
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size=15),
+        title = element_text(size=17)) 
+vln_cdkn2a
+
+# save
+file.name <- here("figures", "supp_fig_2d.1.pdf")
+ggsave(file = file.name, plot = vln_cdkn1a, width = 8, height = 6)
+file.name <- here("figures", "supp_fig_2d.2.pdf")
+ggsave(file = file.name, plot = vln_cdkn2a, width = 8, height = 6)
+```
+
+### **Supplementary figure 2e**
+
+```{r, fig.width = 8, fig.height = 6}
+senescence_up_reg <- intersect(rownames(non_immune@assays$RNA@counts), senescence_up_reg)
+senescence_down_reg <- intersect(rownames(non_immune@assays$RNA@counts), senescence_down_reg)
+
+non_immune = AddModuleScore(non_immune, features = list(senescence_up_reg), name = "senescence_up_reg", assay = "RNA")
+non_immune = AddModuleScore(non_immune, features = list(senescence_down_reg), name = "senescence_down_reg", assay = "RNA")
+
+fibroblast_subclusters <- c("Fibroblast_1", "Fibroblast_2", "Fibroblast_3", "Fibroblast_4", "Fibroblast_5")
+
+vln_senescence_up_reg <- VlnPlot(non_immune, features = "senescence_up_reg1", idents = fibroblast_subclusters, cols = c("lightgray", "red"), pt.size  = 0.8, split.by =  "condition") &
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size=15),
+        title = element_text(size=17)) &  
+  labs(title = "SAASP-upregulated genes")
+vln_senescence_up_reg
+
+vln_senescence_down_reg <- VlnPlot(non_immune, features = "senescence_down_reg1", idents = fibroblast_subclusters, cols = c("lightgray", "red"), pt.size  = 0.8, split.by =  "condition") &
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size=15),
+        title = element_text(size=17)) &  
+  labs(title = "SAASP-downregulated genes")
+vln_senescence_down_reg
+
+
+# save
+file.name <- here("figures", "supp_fig_2e.1.pdf")
+ggsave(file = file.name, plot = vln_senescence_up_reg, width = 8, height = 6)
+file.name <- here("figures", "supp_fig_2e.2.pdf")
+ggsave(file = file.name, plot = vln_senescence_down_reg, width = 8, height = 6)
+```
