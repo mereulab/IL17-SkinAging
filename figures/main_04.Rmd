@@ -1,0 +1,142 @@
+---
+title: "04_IL17_in_lymph"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels A, B, D, F and G of main figure 4. 
+
+---
+
+
+#### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(cowplot)
+library(dplyr)
+library(ggrepel)
+library(sccomp)
+library(here)
+```
+
+#### **Load data:**
+
+```{r}
+# Seurat object
+lymphoid <- readRDS(here("data", "adult_aged", "lymphoid.RDS"))
+lymphoid_subclustered <- readRDS(here("data", "adult_aged", "lymphoid_subclustered.RDS"))
+
+# Sccomp object
+sccomp_lymphoid <- readRDS(here("data", "adult_aged", "sccomp_lymphoid_subclusters.RDS"))
+
+# Colors
+col_lymphoid_subclusters <- readRDS(here("data", "col_lymphoid_subclusters.RDS"))
+```
+
+
+\
+
+### **Main figure 4a**
+
+```{r, fig.width = 17.5, fig.height = 4.5}
+Idents(lymphoid) <- lymphoid$annotation
+features <- c("Cd4+ Th" = "Il17f",
+              "γδ T" = "Il17a",
+              "γδ T" = "Il17f",
+              "ILC" = "Il17a",
+              "ILC" = "Il17f")
+
+fp_plots <- features %>%
+  purrr::imap(~Seurat::VlnPlot(object = lymphoid, 
+                               features = .x, 
+                               group.by = "condition", 
+                               idents = .y, 
+                               cols = c("lightgray", "red")) +
+  labs(title = .y, subtitle = .x) +
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+        legend.position = "none")) 
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 5, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_4a.pdf")), 
+         width = 17.5, height = 4.5)
+```
+
+### **Main figure 4b**
+
+```{r, fig.width = 6, fig.height = 5}
+umap <- Seurat::DimPlot(object = lymphoid_subclustered, 
+                        reduction = 'umap', 
+                        group.by = "gdt_cd4t_subclusters", 
+                        cols = col_lymphoid_subclusters) +
+  theme_void() +
+  theme(legend.text = element_text(size = 14),
+        plot.title = element_text(size = 14, hjust = 0.5),
+        strip.text.x =element_text(size = 15)) +
+  labs(title = "Subpopulation analysis of \n CD4+ Th and γδT cells")
+umap
+
+# save
+file.name <- here::here("figures", "main_fig_4b.pdf")
+ggsave(file = file.name, plot = umap, width = 8, height = 6)
+```
+
+
+### **Main figure 4d and 4f**
+
+```{r, fig.width = 4, fig.height = 8}
+plots <- sccomp::plot_summary(sccomp_lymphoid) 
+
+plots$boxplot
+
+# save
+file.name <-  here::here("figures", "main_fig_4d_f.pdf")
+ggsave(file = file.name, width = 15, height = 8)
+
+```
+
+
+### **Main figure 4g**
+
+```{r, fig.width = 7, fig.height = 4.5}
+Idents(lymphoid) <- lymphoid$annotation
+features <- c("Tmem176a",
+              "Tmem176b")
+
+fp_plots <- features %>%
+  purrr::map(~Seurat::VlnPlot(lymphoid, 
+                              features = .x, 
+                              group.by = "condition", 
+                              idents = "ILC", 
+                              cols = c("lightgray", "red")) +
+  labs(title = "ILC", subtitle = .x) +
+  theme(plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+        legend.position = "none")) 
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_4g.pdf")), 
+         width = 7, height = 4.5)
+```
