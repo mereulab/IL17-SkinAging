@@ -1,0 +1,174 @@
+---
+title: "Supplementary fig. 2"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels B and C of supplementary figure 2. 
+
+---
+
+
+##### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(matchSCore2)
+library(here)
+```
+
+##### **Load data:**
+
+```{r}
+# Seurat objects
+non_immune <- readRDS(here::here("data", "adult_aged", "non_immune.RDS"))
+
+# Sccomp object
+sccomp_non_immune <- readRDS(here::here("data", "adult_aged", "sccomp_non_immune.RDS"))
+
+# DEGs 
+adult_DEGs <- readRDS(here::here("data", "adult_aged", "adult_DEGs.RDS"))
+aged_DEGs <- readRDS(here::here("data", "adult_aged", "aged_DEGs.RDS"))
+cell_type_levels <- readRDS(here::here("data", "adult_aged", "cell_type_levels.RDS"))
+```
+
+
+\
+
+### **Supplementary figure 2a**
+
+```{r, fig.width = 16, fig.height = 10}
+adult_top_DEGs <- matchSCore2::cut_markers(as.vector(levels(ordered(as.factor(adult_DEGs$cluster), levels = cell_type_levels))),
+                       markers = adult_DEGs,
+                       ntop = 100
+)
+
+aged_top_DEGs <- matchSCore2::cut_markers(as.vector(levels(ordered(as.factor(aged_DEGs$cluster), levels = cell_type_levels))),
+                      markers = aged_DEGs,
+                      ntop = 100
+)
+
+ms_plot <- matchSCore2::matchSCore2(gene_cl.ref = adult_top_DEGs, 
+                                    gene_cl.obs = aged_top_DEGs, 
+                                    ylab="ADULT", 
+                                    xlab= "AGED")
+ms_plot$ggplot
+
+# save
+file.name <- here("figures", "supp_fig_2a.pdf")
+ggsave(file = file.name, plot = ms_plot$ggplot, width = 8, height = 6)
+```
+
+### **Supplementary figure 2b**
+
+```{r, echo = F}
+non_immune$condition_annotation <- paste(non_immune$condition, non_immune$annotation, sep = "_") 
+levels <- c("aged_VEC-venules",  "adult_VEC-venules",
+            "aged_Lymphatic EC" , "adult_Lymphatic EC",
+            "aged_Fibroblast_1", "adult_Fibroblast_1",    
+            "aged_Fibroblast_2", "adult_Fibroblast_2",             
+            "aged_Fibroblast_3", "adult_Fibroblast_3",
+            "aged_Fibroblast_4", "adult_Fibroblast_4",           
+            "aged_Fibroblast_5", "adult_Fibroblast_5",
+            "aged_Pericyte", "adult_Pericyte",
+            "aged_Schwann_1", "adult_Schwann_1",                 
+            "aged_Schwann_2", "adult_Schwann_2",        
+            "aged_VEC-arterioles and capillary", "adult_VEC-arterioles and capillary")
+non_immune$condition_annotation <- factor(non_immune$condition_annotation, levels = levels)
+```
+
+```{r, fig.width = 6.5, fig.height = 6}
+features <- c("Casp4", "Foxo3", "Nod1", "Sirpa")
+
+dotplot <- Seurat::DotPlot(object = non_immune, 
+                           features = features, 
+                           dot.min = 0, dot.scale = 10, 
+                           group.by = "condition_annotation", 
+                           scale = T) +
+  guides(color = guide_colorbar(title = 'Average Expression')) + 
+  theme(axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) +  
+    scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_color_gradient2(low ="#1b13f0",  mid = "lightgray", high = "#c7080e") 
+dotplot
+
+# save
+file.name <- here::here("figures", "supp_fig_2b.pdf")
+ggsave(file = file.name, plot = dotplot, width = 5.8, height = 8)
+```
+
+### **Supplementary figure 2c**
+
+```{r, fig.width = 4, fig.height = 8}
+plots <- sccomp::plot_summary(sccomp_non_immune) 
+
+plots$boxplot
+
+# save
+file.name <-  here::here("figures", "supp_fig_2c.pdf")
+ggsave(file = file.name, width = 15, height = 8)
+```
+
+### **Supplementary figure 2d**
+
+```{r, fig.width = 16, fig.height = 6}
+features <- c("Cdkn1a",
+              "Cdkn2a")
+
+fp_plots <- features %>%
+  purrr::imap(~Seurat::VlnPlot(object = non_immune, 
+                               features = .x, 
+                               split.by = "condition", 
+                               cols = c("lightgray", "red")) +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title.x = element_blank())) 
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("supp_fig_2d.pdf")), 
+         width = 16, height = 6)
+```
+
+### **Supplementary figure 2e**
+
+```{r, fig.width = 16, fig.height = 6}
+features <- c("SAASP-upregulated genes" = "senescence_up_reg1",
+              "SAASP-downregulated genes" = "senescence_down_reg1")
+
+fibroblast_subclusters <- c("Fibroblast_1", "Fibroblast_2", "Fibroblast_3", "Fibroblast_4", "Fibroblast_5")
+
+fp_plots <- features %>%
+  purrr::imap(~Seurat::VlnPlot(object = non_immune, 
+                               features = .x, 
+                               split.by = "condition", 
+                               idents = fibroblast_subclusters, 
+                               cols = c("lightgray", "red")) +
+  labs(title = .y) +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title.x = element_blank()))
+
+gg <- ggpubr::ggarrange(plotlist = fp_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("supp_fig_2e.pdf")), 
+         width = 16, height = 6)
+```
