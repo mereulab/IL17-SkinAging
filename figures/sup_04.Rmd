@@ -1,0 +1,189 @@
+---
+title: "Supplementary fig. 4"
+author: "Marta Casado-Pelaez"
+output:  
+  html_document:
+    toc: true
+    toc_float:
+       collapsed: false
+       smooth_scroll: false
+    fig_caption: true
+
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align='center', 
+                      message = FALSE, warning = FALSE)
+```
+
+---
+
+This script generates panels A, B and C of supplementary figure 4. 
+
+---
+
+
+##### **Libraries:**
+
+```{r}
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(matchSCore2)
+library(here)
+```
+
+##### **Load data:**
+
+```{r}
+# Lisi scores
+lisi.scores <- readRDS(here::here("results", "lisi.scores", "lisi.scores.RDS"))
+
+# Seurat objects
+non_immune <- readRDS(here::here("data", "control_treated", "non_immune.RDS"))
+lymphoid <- readRDS(here::here("data", "control_treated", "lymphoid.RDS"))
+myeloid <- readRDS(here::here("data", "control_treated", "myeloid.RDS"))
+dermis <- readRDS(here::here("data", "control_treated", "dermis.RDS"))
+
+# colors
+col_lymphoid <- readRDS(here::here("data", "col_lymphoid.RDS"))
+col_myeloid <- readRDS(here::here("data", "col_myeloid.RDS"))
+col_non_immune <- readRDS(here::here("data", "col_non_immune.RDS"))
+col_dermis <- readRDS(here::here("data", "col_dermis.RDS"))
+col_replicate <- readRDS(here::here("data", "control_treated", "col_replicate.RDS"))
+```
+
+
+\
+
+### **Supplementary figure 4a**
+##### **LYMPHOID**
+
+```{r, fig.width = 7, fig.height = 5}
+batch_corrections_plots <- function(se_obj_batch_correction, lisi.score, cols){
+  
+  gg_features <- list(theme_void(), 
+                      theme(legend.text = element_text(size = 14),
+                            plot.title = element_text(size = 15, hjust = 0.5),
+                            plot.margin = unit(c(0.5,0.5,0.5,0.5), "lines")))
+  
+  # UMAP after batch effect correction
+  umap_batch_correction <- Seurat::DimPlot(se_obj_batch_correction, 
+                                           reduction = 'umap', 
+                                           cols = cols, 
+                                           group.by = "replicate") + 
+    labs(title = "after batch effect correction") +
+    gg_features
+  
+  # LISI value
+  umap_lisi_score <- lisi.score %>%
+    ggplot(aes(UMAP_1, UMAP_2, col = replicate)) +
+    geom_point(shape = 16, size = 0.5) +
+    scale_color_gradient(low="blue", high="yellow") + 
+    labs(title = "LISI value") +
+    gg_features
+
+
+  plots <- list(umap_batch_correction, umap_lisi_score)
+  return(plots)
+}
+```
+
+##### **LYMPHOID**
+
+```{r, fig.width = 12, fig.height = 5}
+lymphoid_batch_corrections_plots <- batch_corrections_plots(lymphoid, lisi.scores[["lymphoid_control_vs_treated"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = lymphoid_batch_corrections_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_4a.1.pdf")), 
+         width = 12, height = 5)
+```
+
+##### **MYELOID**
+
+```{r, fig.width = 12, fig.height = 5}
+myeloid_batch_corrections_plots <- batch_corrections_plots(myeloid, lisi.scores[["myeloid_control_vs_treated"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = myeloid_batch_corrections_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_4a.2.pdf")), 
+         width = 12, height = 5)
+```
+
+##### **NON-IMMUNE**
+
+```{r, fig.width = 12, fig.height = 5}
+non_immune_batch_corrections_plots <- batch_corrections_plots(non_immune, lisi.scores[["non_immune_control_vs_treated"]], col_replicate)
+
+gg <- ggpubr::ggarrange(plotlist = non_immune_batch_corrections_plots, ncol = 2, nrow = 1)
+gg
+
+# save
+ggsave(gg, file = here::here("figures", paste0("main_fig_4a.3.pdf")), 
+         width = 12, height = 5)
+```
+
+### **Supplementary figure 4b**
+
+##### **LYMPHOID**
+
+```{r, fig.width = 7, fig.height = 6}
+matchSCore2::summary_barplot(lymphoid$annotation, lymphoid$replicate) + 
+  scale_fill_manual(values = col_lymphoid) +
+  labs(title = "CD45+ Lymphoid") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,4.5), "lines"))
+
+ggsave(file = here::here("figures", paste0("main_fig_4c.1.pdf")), 
+         width = 7, height = 6)
+```
+
+##### **MYELOID**
+
+```{r, fig.width = 7, fig.height = 6}
+matchSCore2::summary_barplot(myeloid$annotation, myeloid$replicate) + 
+  scale_fill_manual(values = col_myeloid) +
+  labs(title = "CD45+ Myeloid") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,4.5), "lines")) 
+
+ggsave(file = here::here("figures", paste0("main_fig_1c.2.pdf")), 
+         width = 7, height = 6)
+```
+
+##### **NON-IMMUNE**
+
+```{r, fig.width = 8, fig.height = 6}
+matchSCore2::summary_barplot(non_immune$annotation, non_immune$replicate) + 
+  scale_fill_manual(values = col_non_immune) +
+  labs(title = "CD45-") +
+  theme(plot.title = element_text(size = 15, hjust = 0.5),
+        plot.margin = unit(c(0.5,0.5,0.5,4.5), "lines")) 
+
+ggsave(file = here::here("figures", paste0("main_fig_1c.3.pdf")), 
+         width = 8, height = 6)
+```
+
+### **Supplementary figure 4c**
+
+```{r, fig.width = 15, fig.height = 8}
+umap <- Seurat::DimPlot(object = dermis, 
+                        reduction = 'umap', 
+                        cols = col_dermis, 
+                        group.by = "annotation") + 
+  theme_void() +
+  theme(legend.text = element_text(size = 14),
+        plot.title = element_text(size = 14, hjust = 0.5),
+        plot.margin = unit(c(1,1,1,1), "lines")) +
+    labs(title = "All EpCAM- dermal cells")
+
+umap
+# save
+file.name <- here::here("figures", "main_fig_4c.pdf")
+ggsave(file = file.name, plot = umap, width = 15, height = 8)
+```
