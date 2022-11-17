@@ -1,5 +1,5 @@
 ---
-title: "Main Figure 3 (panels A, B, C and D)"
+title: "Main Figure 3 (panels A, B, C and G)"
 author: "Marta Casado-Pelaez"
 output:  
   html_document:
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, fig.align='center',
 
 ---
 
-This script generates panels A, B, C and D of main figure 3. 
+This script generates panels A, B, C and G of main figure 3. 
 
 ---
 
@@ -126,7 +126,7 @@ fp_plots %>%
 ```
 
 
-### **Main figure 3d**
+### **Main figure 3g**
 
 ```{r, fig.width = 7, fig.height = 12, results=F}
 avg_log2FC_threshold <- 0.35
@@ -171,7 +171,7 @@ gg
 
 # save
 volcano_plots %>% 
-  purrr::imap(~ggsave(.x, file = here::here("figures", paste0("main_fig_3d_", .y ,".pdf")), 
+  purrr::imap(~ggsave(.x, file = here::here("figures", paste0("main_fig_3g_", .y ,".pdf")), 
          width = 9, height = 4.5))
 
 ```
